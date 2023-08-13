@@ -267,6 +267,7 @@ class TimeDropout:
         return dout * self.mask
 
 # chatGPTにより作成した変分Dropout
+# 差し替え後のプログラムでは使用していない。
 class VariationalDropout:
     def __init__(self, dropout_ratio=0.5):
         self.params, self.grads = [], []

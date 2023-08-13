@@ -21,24 +21,25 @@ def remove_duplicate(params, grads):
         L = len(params)
 
         for i in range(0, L-1):
-            for j in range(i+1, L):
-                if params[i] is params[j]: # 重みを共有する
-                    grads[i] += grads[j]
+            for j in range(i+1, L): # 重みを共有する場合
+                if params[i] is params[j]:
+                    grads[i] += grads[j]  # 勾配の加算
                     find_flg = True
                     params.pop(j)
                     grads.pop(j)
+                # 転置行列として重みを共有する場合（weight tying）
                 elif params[i].ndim == 2 and params[j].ndim == 2 and \
-                        params[i].T.shape == params[j].shape and \
-                        np.all(params[i].T == params[j]): # 転置行列として重みを共有する
+                    params[i].T.shape == params[j].shape and np.all(params[i].T == params[j]):
                     grads[i] += grads[j].T
                     find_flg = True
                     params.pop(j)
                     grads.pop(j)
 
-                if find_flg:
+                if find_flg: 
                     break
-            if find_flg:
+            if find_flg: 
                 break
+
         if not find_flg:
             break
 
@@ -97,8 +98,7 @@ class RnnlmTrainer:
                 if (eval_interval is not None) and (iters % eval_interval) == 0:
                     ppl = np.exp(total_loss / loss_count)
                     elapsed_time = time.time() - start_time
-                    print('| epoch %d |  iter %d / %d | time %d[s] | perplexity %.2f'
-                          % (self.current_epoch + 1, iters + 1, max_iters, elapsed_time, ppl))
+                    print(f'| epoch {self.current_epoch + 1} |  iter {iters + 1} / {max_iters} | time {elapsed_time}[s] | perplexity {ppl:.2f}')
                     self.ppl_list.append(float(ppl))
                     total_loss, loss_count = 0, 0
 

@@ -15,9 +15,9 @@ class Embedding:
 
     def backward(self, dout):
         dW, = self.grads
-        dW[...] = 0 # Ellipsis : 次元省略
+        dW[...] = 0
         if GPU:
-            np.scatter_add(dW, self.idx, dout) # dWのidxにdoutを加算
+            np._cupyx.scatter_add(dW, self.idx, dout)
         else:
             np.add.at(dW, self.idx, dout)
         return None
