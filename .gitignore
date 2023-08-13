@@ -1,2 +1,4 @@
 # コンパイル済みファイル
-__pycache__/
+# コンパイル済みファイル
+common/__pycache__/
+deteset/__pycache__/
