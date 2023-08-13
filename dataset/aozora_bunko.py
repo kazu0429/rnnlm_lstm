@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append('../../Rnnlm')
+sys.path.append('../../rnnlm')
 try:
     import urllib.request
 except ImportError:
