@@ -2,10 +2,15 @@
 import sys
 sys.path.append('..')
 from common import config
+# GPUで実行する場合は下記のコメントアウトを消去（要cupy）
+# ==============================================
+config.GPU = True
+# ==============================================
 from common.optimizer import SGD
 from common.trainer import RnnlmTrainer
-from common.util import eval_perplexity
+from common.util import eval_perplexity, to_gpu
 from dataset import ptb
+from dataset import aozora_bunko
 from better_rnnlm import BetterRnnlm
 
 
@@ -20,14 +25,20 @@ max_grad = 0.25
 dropout = 0.5
 
 # 学習データの読み込み
+# PTBデータセット
 corpus, word_to_id, id_to_word = ptb.load_data('train')
+corpus_val, _, _ = ptb.load_data('val')
+corpus_test, _, _ = aozora_bunko.load_data('test')
+
+# 太宰治データセット
+corpus, word_to_id, id_to_word = aozora_bunko.load_data('train')
 corpus_val, _, _ = ptb.load_data('val')
 corpus_test, _, _ = ptb.load_data('test')
 
-# if config.GPU:
-#     corpus = to_gpu(corpus)
-#     corpus_val = to_gpu(corpus_val)
-#     corpus_test = to_gpu(corpus_test)
+if config.GPU:
+    corpus = to_gpu(corpus)
+    corpus_val = to_gpu(corpus_val)
+    corpus_test = to_gpu(corpus_test)
 
 vocab_size = len(word_to_id)
 xs = corpus[:-1]

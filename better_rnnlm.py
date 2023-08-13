@@ -19,10 +19,13 @@ class BetterRnnlm:
         lstm_Wx2 = (rn(H, 4 * H) / np.sqrt(H)).astype('f')
         lstm_Wh2 = (rn(H, 4 * H) / np.sqrt(H)).astype('f')
         lstm_b2 = np.zeros(4 * H).astype('f')
+        # lstm_Wx3 = (rn(H, 4 * H) / np.sqrt(H)).astype('f')
+        # lstm_Wh3 = (rn(H, 4 * H) / np.sqrt(H)).astype('f')
+        # lstm_b3 = np.zeros(4 * H).astype('f')
         affine_b = np.zeros(V).astype('f')
 
         # レイヤの生成
-        #
+        # 3層
         # self.layers = [
         #     TimeEmbedding(embed_W),
         #     TimeDropout(dropout_ratio),
@@ -30,15 +33,22 @@ class BetterRnnlm:
         #     TimeDropout(dropout_ratio),
         #     TimeLSTM(lstm_Wx2, lstm_Wh2, lstm_b2, stateful=True),
         #     TimeDropout(dropout_ratio),
+        #     TimeLSTM(lstm_Wx3, lstm_Wx3, lstm_b3, stateful=True),
+        #     TimeDropout(dropout_ratio),
         #     TimeAffine(embed_W.T, affine_b)  # weight tying!!
         # ]
+        
+        # self.loss_layer = TimeSoftmaxWithLoss()
+        # self.lstm_layers = [self.layers[2], self.layers[4], self.layers[6]]
+        # self.drop_layers = [self.layers[1], self.layers[3], self.layers[5], self.layers[7]]
+        
         self.layers = [
             TimeEmbedding(embed_W),
-            VariationalDropout(dropout_ratio),  # 変分Dropoutに変更
+            TimeDropout(dropout_ratio),  
             TimeLSTM(lstm_Wx1, lstm_Wh1, lstm_b1, stateful=True),
-            VariationalDropout(dropout_ratio),  # 変分Dropoutに変更
+            TimeDropout(dropout_ratio), 
             TimeLSTM(lstm_Wx2, lstm_Wh2, lstm_b2, stateful=True),
-            VariationalDropout(dropout_ratio),  # 変分Dropoutに変更
+            TimeDropout(dropout_ratio),  
             TimeAffine(embed_W.T, affine_b)
         ]
 
@@ -51,13 +61,16 @@ class BetterRnnlm:
             self.params += layer.params
             self.grads += layer.grads
 
-    def predict(self, xs):
+    def predict(self, xs, train_flg=False):
+        for layer in self.drop_layers:
+            layer.train_flg = train_flg
+
         for layer in self.layers:
             xs = layer.forward(xs)
         return xs
 
-    def forward(self, xs, ts):
-        score = self.predict(xs)
+    def forward(self, xs, ts, train_flg=True):
+        score = self.predict(xs, train_flg)
         loss = self.loss_layer.forward(score, ts)
         return loss
 
@@ -71,10 +84,10 @@ class BetterRnnlm:
         for layer in self.lstm_layers:
             layer.reset_state()
 
-    def save_params(self, file_name="./models/BetterRnnlm.pkl"):
+    def save_params(self, file_name="./BetterRnnlm.pkl"):
         with open(file_name, 'wb') as f:
             pickle.dump(self.params, f)
 
-    def load_params(self, file_name="./models/BettrRnnlm.pkl"):
+    def load_params(self, file_name="./BettrRnnlm.pkl"):
         with open(file_name, 'rb') as f:
             self.params = pickle.load(f)
